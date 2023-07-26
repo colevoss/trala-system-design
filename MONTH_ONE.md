@@ -193,3 +193,47 @@ providing an extensive and expressive API that can be learned by anyone, thus re
 any one person to hold some specific knowledge about how the service is deployed and provisioned.
 
 ![Month One High Level Diagram](./assets/MonthOneHighLevel.png)
+
+## Updates
+
+### Time Based Notifications
+
+What is all in this activity summary?
+
+I'm thinking some of the posts that had the most engagement that the user might have interacted with
+will be included in this email.
+
+How do we track that?
+
+I think at this point we need to introduce some state or storage for this piece. Given the 12 month
+requirement of allowing users to bookmark content, this would be a safe bet to implement now.
+
+### Quick Ideas
+
+When a user makes a request for a feed store the aggregate feed in a database or cache.
+Emit an event like `user.feed.aggreaged` to which a subscriber can retrieve that feed data and analyze
+it for engagement and popularity. This could then update some other table or cache record to create
+a digest for the user for that day (or other time period). By filtering and ranking posts by engagement
+levels we can start to curate a daily digest for them.
+
+At the end of each day or time period (per time zone) we can query for the curated digests and create
+emails or notifications to send to the user.
+
+### Account Storage
+
+We will need to expedite the storage proposal from the 12 month version into this version by implementing
+a database for the user to create an account in, register social media accounts, and might as well implement
+the new version of auth token storage.
+
+This will allow us to tie digests to the user as we curate their daily summary emails.
+
+### Polling
+
+In addition to the events published when a user manually fetches the feed, we will have a polling job
+that requests new content from each social media provider that a user is registered for. This is essentially
+the same process just performed automatically.
+
+I would propose instead of every 4 minutes, we run this every minute but separate the user base into 4
+secions by some sort of identifier, location, or other data point too keep each job less intensive.
+
+![Digest Email Infra](/assets/UpdatedDigestEmailInfra.png)
