@@ -100,3 +100,36 @@ by the cloud provider like DynamoDB.
 ## SMS Service Topology
 
 ![SMS Topology](/assets/OneYearSSMTopo.png)
+
+## Feature Updates
+
+### Following
+
+This can be impelemented by expanding the SMS Interface to include integrations with each provider's
+followers API's and expanding the Aggregator's API to expose endpoints for a client to use.
+
+
+### Bookmarking
+
+I believe this could be as simple as expanding the database to include a "Bookmarks" collection or table
+that would associate a user with a Bookmark record including the following data
+
+- Social Media Provider (Facebook, twitter, ...etc)
+- Post id for bookmarking
+- Timestamp for bookmark
+
+
+### Push notification management
+
+I envision this as a way for the user to get notifications from certain accounts that they are interested
+in. In that case, I would first look at each provider's API to find a webhook or other form of push-based
+integration for us to take advantage of.
+
+Otherwise we would build an additional service or module that tracks accounts to watch for notifications
+and at some interval request those account's new posts and send those notifications.
+
+### Multiple Accounts Per Platform
+
+The proposed Auth solution above should support this with some slight modifications. By storing the
+account information and long lived auth token for each account, we should be able to keep them signed in
+and fetch content for each account.
