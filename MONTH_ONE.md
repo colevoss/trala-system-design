@@ -123,6 +123,12 @@ This API would be paginated by optionally including a cursor for which the next 
 
 Gets a full post for a specific service.
 
+### GraphQL
+
+I do not believe GraphQL would be a good API interface for the Aggregator service. Given the broad range
+of data models provided by each social media provider, the value of GQL's type safe schema would be
+diminished, or, at the very least, overly complicated.
+
 ## Auth
 
 For the initial design of this system, Authentication to the various Social Media integrations should
