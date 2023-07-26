@@ -2,10 +2,13 @@
 
 ## Performance Requirements
 
-Expected Traffic: 100,000 Daily Active Users (DAU)
-Peak Time: 12:00 PM to 2PM and 6:00 PM to 9:00 PM (local time)
-Peak Usage Stats: 50,000 Concurrent Users
-Response Time: 500 milliseconds for essential operations during normal traffic
+**Expected Traffic:** 100,000 Daily Active Users (DAU)
+
+**Peak Time:** 12:00 PM to 2PM and 6:00 PM to 9:00 PM (local time)
+
+**Peak Usage Stats:** 50,000 Concurrent Users
+
+**Response Time:** 500 milliseconds for essential operations during normal traffic
 
 ## High Level Architecture
 
@@ -89,11 +92,98 @@ interface SocialMediaService {
 
 type AggregateFeed = {
   items: FeedItem[];
+  cursor: string; // Base64 encoded json object describing which page of each service was included
 }
 
 interface AggregateService {
   getFeed(cursor: string): AggregateFeed;
 }
 ```
+
+## API
+
+My initial inclination is to expose the aggregator service as a simple REST API. My other proposed option
+would be GraphQL.
+
+### Rest API
+
+I believe this would be the best starting point. Ideally there are only a handful of endpoints that
+would need to be implemented at first. This would also allow us to version the API in the event of
+major changes down the road without breaking all clients.
+
+#### Endpoints
+
+##### `GET /feed`
+
+Retrieves an aggregated feed of all social media services a user has requested.
+
+This API would be paginated by optionally including a cursor for which the next page should be returned.
+
+##### `GET /:service/post/:postId`
+
+Gets a full post for a specific service.
+
+## Auth
+
+For the initial design of this system, Authentication to the various Social Media integrations should
+be kept relatively simple and will evolve into a more complex, secure, and reliable auth system in the
+future.
+
+The Aggregator client (app or website) will keep track of the authentication credentials for each
+service a user wishes to see their social feed from. When making a request to the aggregator backend,
+the secure auth credentials should be included via a request header property for the back end to use
+when making the request to each SMS.
+
+**Example**
+
+```json
+{
+  "Spacebook-Auth-Token": "<SHORT LIVED USER AUTH TOKEN>",
+  "Shreddit-Auth-Token": "<USER AUTH TOKEN>",
+  "Twitter-Auth-Token": "<AUTH TOKEN>",
+}
+```
+
+In this example, the user would like to aggregate their Spacebook, Shreddit, and Twitter feeds, but
+notice they are not interested in receiving their Photogram feed. The exclusion of that auth token
+will be enough for the Aggregator service to no request the feed from Photogram.
+
+## Observability and Monitoring
+
+This service should include standardized and extensive logging for information, warnings, errors, and
+fatal issues. This logging will be integrated with the logging features of the chosen host (Cloudwatch,
+GCP Logging, etc.). The logging libraries used throughout the project project should include information
+such as timestamps, request ids, log level, and relevant information for its context. GCP and AWS both
+include various tools for tracking metrics and errors which would provide sufficient warnings and other
+important information.
+
+### Logging Standards
+
+* Timestamp
+* Request ID
+* Outgoing request timing
+* Incoming request timing
+* Incoming request parameters
+* Descriptive message to provide context
+* Log level
+
+## Scalability
+
+The service will be deployed so that it can be auto-scaled to meet the user load at any time. Thus far,
+this service is completely stateless, thus horizontal scaling using the tools made available by ECS/Fargate,
+Lambda, or Google Cloud Run should not introduce an extensive level of complexity.
+
+Using the observability tooling and metrics outlined above, we will be able to fine tune scaling threshold
+like min/max CPU and memory usage as well as request loads.
+
+## Deployability
+
+Deploying this service should be as automated as possible. All provisions needed to run the aggregator
+in a production environment will be done so using Infrastructure As Code tooling like [Terraform](https://www.terraform.io/)
+or [Pulumi](https://www.pulumi.com/)
+
+Using a tool like Terraform will allow us to keep track of any changes to the infrastructure while also
+providing an extensive and expressive API that can be learned by anyone, thus reducing the need for
+any one person to hold some specific knowledge about how the service is deployed and provisioned.
 
 ![Month One High Level Diagram](./assets/MonthOneHighLevel.png)
